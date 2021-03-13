@@ -97,7 +97,8 @@ class ReplayBuffer(object):
         indices = np.random.choice(len(self.buffer) - 1, batch_size, replace=False)
         state, action, reward, next_state, done = zip(*[self.buffer[idx] for idx in
                                                              indices])
-
+        np.concatenate(state)
+        np.concatenate(next_state)
 
         return state, action, reward, next_state, done
 
