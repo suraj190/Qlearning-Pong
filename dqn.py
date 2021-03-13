@@ -49,7 +49,7 @@ class QLearner(nn.Module):
             state = Variable(torch.FloatTensor(np.float32(state)).unsqueeze(0), requires_grad=True)
             # TODO: Given state, you should write code to get the Q value and chosen action
             q_vals = self.forward(state)
-            action = q_vals.max(1)[1].data[0]
+            action = q_vals.max(1)[1].item()
 
 
         else:
@@ -73,10 +73,10 @@ def compute_td_loss(model, target_model, batch_size, gamma, replay_buffer):
     q_vals = model(state)
     v_val = model(next_state)
 
-    q_value = q_values.gather(1, actions.unsqueeze(1)).squeeze(1)
-    next_q_value = next_q_values.max(1)[0]
-    expected_q_value = rewards + gamma * next_q_value * (1 - done)
-    loss = (q_value - Variable(expected_q_value.data)).pow(2).mean()
+    q_vals = q_vals.gather(1, action.unsqueeze(1)).squeeze(1)
+    v_val = v_val.max(1)[0]
+    expected_q_value = reward + gamma * v_val * (1 - done)
+    loss = (q_vals - autograd.Variable(expected_q_value.data)).pow(2).mean()
     
     return loss
 
@@ -94,10 +94,10 @@ class ReplayBuffer(object):
     def sample(self, batch_size):
         # TODO: Randomly sampling data with specific batch size from the buffer
 
-        # state, action, reward, next_state, done = random.sample(len(self.buffer)-1, batch_size)
-        indices = np.random.choice(len(self.buffer) - 1, batch_size, replace=False)
-        state, action, reward, next_state, done = ([self.buffer[idx] for idx in
-                                                             indices])
+        state, action, reward, next_state, done = zip(*random.sample(self.buffer), batch_size)
+        np.concatenate(state)
+        np.concatenate(next_state)
+
 
 
         return state, action, reward, next_state, done
