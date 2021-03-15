@@ -64,22 +64,20 @@ class QLearner(nn.Module):
 def compute_td_loss(model, target_model, batch_size, gamma, replay_buffer):
     state, action, reward, next_state, done = replay_buffer.sample(batch_size)
 
-    state = Variable(torch.FloatTensor(np.float32(state)))
+    state = Variable(torch.FloatTensor(np.float32(state)).squeeze(1))
     next_state = Variable(torch.FloatTensor(np.float32(next_state)).squeeze(1), requires_grad=True)
     action = Variable(torch.LongTensor(action))
     reward = Variable(torch.FloatTensor(reward))
     done = Variable(torch.FloatTensor(done))
     # implement the loss function here
 
+    terminate = torch.ones_like(done) - done
     q_vals = model(state)
 
-
-    v_vals = target_model(next_state)
-
     q_vals = q_vals.gather(1, action.unsqueeze(1)).squeeze(1)
-    v_vals = v_vals.max(1)[0]
-    expected_q_value = reward + gamma * v_vals * (1 - done)
-    loss = (q_vals - Variable(expected_q_value.data)).pow(2).mean()
+    aPrime_vals = target_model(next_state).max(dim=1)[0].detach().cpu().numpy()
+    y_j = reward + Variable(torch.FloatTensor(gamma * aPrime_vals)) * terminate
+    loss = (q_vals - y_j).pow(2).mean()
     
     return loss
 
@@ -97,7 +95,7 @@ class ReplayBuffer(object):
     def sample(self, batch_size):
         # TODO: Randomly sampling data with specific batch size from the buffer
 
-        indices = np.random.choice(len(self.buffer) - 1, batch_size, replace=False)
+        indices = np.random.choice(len(self.buffer) - 1, batch_size)
         state, action, reward, next_state, done = zip(*[self.buffer[idx] for idx in
                                                              indices])
         np.concatenate(state)
