@@ -49,7 +49,8 @@ class QLearner(nn.Module):
             state = Variable(torch.FloatTensor(np.float32(state)).unsqueeze(0), requires_grad=True)
             # TODO: Given state, you should write code to get the Q value and chosen action
             q_vals = self.forward(state)
-            action = torch.argmax(q_vals.data)
+
+            action = torch.argmax(q_vals)
 
 
         else:
@@ -70,12 +71,14 @@ def compute_td_loss(model, target_model, batch_size, gamma, replay_buffer):
     done = Variable(torch.FloatTensor(done))
     # implement the loss function here
 
-    q_vals = model.cuda(state)
-    v_val = model.cuda(next_state)
+    q_vals = model(state)
+
+
+    v_vals = target_model(next_state)
 
     q_vals = q_vals.gather(1, action.unsqueeze(1)).squeeze(1)
-    v_val = v_val.max(1)[0]
-    expected_q_value = reward + gamma * v_val * (1 - done)
+    v_vals = v_vals.max(1)[0]
+    expected_q_value = reward + gamma * v_vals * (1 - done)
     loss = (q_vals - Variable(expected_q_value.data)).pow(2).mean()
     
     return loss
