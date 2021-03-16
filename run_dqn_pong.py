@@ -77,9 +77,11 @@ for frame_idx in range(1, num_frames + 1):
     if frame_idx % 10000 == 0 and len(replay_buffer) > replay_initial:
         print('#Frame: %d, Loss: %f' % (frame_idx, np.mean(losses, 0)[1]))
         print('Last-10 average reward: %f' % np.mean(all_rewards[-10:], 0)[1])
+        torch.save(model.state_dict(),'my_trained.pth')
 
     if frame_idx % 50000 == 0:
         target_model.copy_from(model)
 
-
+np.save('losses.npy',losses)
+np.save('rewards.npy',all_rewards)
 
