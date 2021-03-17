@@ -96,9 +96,7 @@ class ReplayBuffer(object):
     def sample(self, batch_size):
         # TODO: Randomly sampling data with specific batch size from the buffer
 
-        indices = np.random.choice(len(self.buffer) - 1, batch_size)
-        state, action, reward, next_state, done = zip(*[self.buffer[idx] for idx in
-                                                             indices])
+        state, action, reward, next_state, done = zip(*random.sample(self.buffer,batch_size))
         np.concatenate(state)
         np.concatenate(next_state)
 
